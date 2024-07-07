@@ -16,9 +16,11 @@ const ImageList: React.FC<ImageListProps> = ({ images }) => {
   }
 
   return (
-    <div>
+    <div className="image-list">
       {images.map((image) => (
-        <img key={image.id} src={image.urls.small} alt={image.alt_description} />
+        <div key={image.id} className="image-container">
+          <img src={image.urls.small} alt={image.alt_description} />
+        </div>
       ))}
     </div>
   );

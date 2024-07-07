@@ -13,7 +13,7 @@ const SearchPage: React.FC = () => {
   const handleSearch = async (newPage: number = 1) => {
     try {
       const response = await axios.get(`https://api.unsplash.com/search/photos`, {
-        params: { query, page: newPage, per_page: 10, color: selectedColor, order_by: sortBy },
+        params: { query, page: newPage, per_page: 12, color: selectedColor || undefined, order_by: sortBy },
         headers: {
           Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`
         }
@@ -36,40 +36,39 @@ const SearchPage: React.FC = () => {
   const handlePrevPage = () => handleSearch(page - 1);
 
   return (
-    <div>
-      <input 
-        type="text" 
-        value={query} 
-        onChange={(e) => setQuery(e.target.value)} 
-        onKeyPress={handleKeyPress} 
-        placeholder="Search for images..." 
-      />
-      <button onClick={() => handleSearch()}>Search</button>
-
-      <select onChange={(e) => setSelectedColor(e.target.value)} value={selectedColor}>
-        <option value="">All Colors</option>
-        <option value="black_and_white">Black and White</option>
-        <option value="black">Black</option>
-        <option value="white">White</option>
-        <option value="yellow">Yellow</option>
-        <option value="orange">Orange</option>
-        <option value="red">Red</option>
-        <option value="purple">Purple</option>
-        <option value="magenta">Magenta</option>
-        <option value="green">Green</option>
-        <option value="teal">Teal</option>
-        <option value="blue">Blue</option>
-      </select>
-
-      <select onChange={(e) => setSortBy(e.target.value)} value={sortBy}>
-        <option value="relevant">Relevant</option>
-        <option value="latest">Latest</option>
-      </select>
-
+    <div className="container">
+      <div className="search-bar">
+        <input 
+          type="text" 
+          value={query} 
+          onChange={(e) => setQuery(e.target.value)} 
+          onKeyPress={handleKeyPress} 
+          placeholder="Search for images..." 
+        />
+        <button onClick={() => handleSearch()}>Search</button>
+        <select onChange={(e) => setSelectedColor(e.target.value)} value={selectedColor}>
+          <option value="">All Colors</option>
+          <option value="black_and_white">Black and White</option>
+          <option value="black">Black</option>
+          <option value="white">White</option>
+          <option value="yellow">Yellow</option>
+          <option value="orange">Orange</option>
+          <option value="red">Red</option>
+          <option value="purple">Purple</option>
+          <option value="magenta">Magenta</option>
+          <option value="green">Green</option>
+          <option value="teal">Teal</option>
+          <option value="blue">Blue</option>
+        </select>
+        <select onChange={(e) => setSortBy(e.target.value)} value={sortBy}>
+          <option value="relevant">Relevant</option>
+          <option value="latest">Latest</option>
+        </select>
+      </div>
       {error && <p>{error}</p>}
       <ImageList images={images} />
       {images.length > 0 && (
-        <div>
+        <div className="pagination">
           <button onClick={handlePrevPage} disabled={page === 1}>Previous</button>
           <button onClick={handleNextPage}>Next</button>
         </div>

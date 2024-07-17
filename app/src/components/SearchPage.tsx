@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import ImageList from "./ImageList";
 
@@ -8,12 +8,19 @@ const SearchPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [sortBy, setSortBy] = useState("relevant");
-  const [clientFilterColor, setClientFilterColor] = useState("");
-  const [clientSortOrder, setClientSortOrder] = useState("relevant");
+  const [clientFilterColor] = useState("");
+  const [clientSortOrder] = useState("relevant");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Add isLoading state
+  const [hasSearched, setHasSearched] = useState(false); // Track if a search has been performed
 
   const handleSearch = async (newPage: number = 1) => {
+    if (!query) {
+      return;
+    }
+
     try {
+      setIsLoading(true); // Set loading to true
       const url = `https://api.unsplash.com/search/photos`;
       const params = {
         query,
@@ -26,20 +33,14 @@ const SearchPage: React.FC = () => {
         Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
       };
 
-      console.log("Request URL:", url);
-      console.log("Request Params:", params);
-      console.log("Request Headers:", headers);
-
       const response = await axios.get(url, { params, headers });
       setImages(response.data.results);
       setPage(newPage);
       setError("");
+      setHasSearched(true); // Set hasSearched to true after the first search
     } catch (error) {
       const err = error as AxiosError; // Use AxiosError for type assertion if using axios
       if (err.response) {
-        console.error("Error Response Data:", err.response.data);
-        console.error("Error Response Status:", err.response.status);
-        console.error("Error Response Headers:", err.response.headers);
         if (
           err.response.status === 403 &&
           (err.response.data as any).message === "Rate Limit Exceeded"
@@ -55,12 +56,12 @@ const SearchPage: React.FC = () => {
           );
         }
       } else if (err.request) {
-        console.error("Error Request:", err.request);
         setError("No response received from server. Please try again.");
       } else {
-        console.error("Error Message:", err.message);
         setError(`Error: ${err.message}`);
       }
+    } finally {
+      setIsLoading(false); // Set loading to false
     }
   };
 
@@ -73,6 +74,20 @@ const SearchPage: React.FC = () => {
   const handleNextPage = () => handleSearch(page + 1);
   const handlePrevPage = () => handleSearch(page - 1);
 
+  const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedColor(e.target.value);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value);
+  };
+
+  useEffect(() => {
+    if (query) {
+      handleSearch(1);
+    }
+  }, [selectedColor, sortBy]); // Trigger search when selectedColor or sortBy changes
+
   return (
     <div className="container">
       <div className="search-bar">
@@ -84,50 +99,17 @@ const SearchPage: React.FC = () => {
           placeholder="Search for images..."
         />
         <button onClick={() => handleSearch()}>Search</button>
-        <select
-          onChange={(e) => setSelectedColor(e.target.value)}
-          value={selectedColor}
-        >
-          <option value="">All Colors(search)</option>
-          <option value="black_and_white">Black and White</option>
+        <select onChange={handleColorChange} value={selectedColor}>
+          <option value="">All Colors (search)</option>
           <option value="black">Black</option>
           <option value="white">White</option>
-          <option value="yellow">Yellow</option>
-          <option value="orange">Orange</option>
           <option value="red">Red</option>
-          <option value="purple">Purple</option>
-          <option value="magenta">Magenta</option>
           <option value="green">Green</option>
-          <option value="teal">Teal</option>
           <option value="blue">Blue</option>
         </select>
-        <select onChange={(e) => setSortBy(e.target.value)} value={sortBy}>
-          <option value="relevant">Relevant(Search)</option>
-          <option value="latest">Latest(Search)</option>
-        </select>
-        <select
-          onChange={(e) => setClientFilterColor(e.target.value)}
-          value={clientFilterColor}
-        >
-          <option value="">All Colors (Filter)</option>
-          <option value="black_and_white">Black and White (Client)</option>
-          <option value="black">Black (Client)</option>
-          <option value="white">White (Client)</option>
-          <option value="yellow">Yellow (Client)</option>
-          <option value="orange">Orange (Client)</option>
-          <option value="red">Red (Client)</option>
-          <option value="purple">Purple (Client)</option>
-          <option value="magenta">Magenta (Client)</option>
-          <option value="green">Green (Client)</option>
-          <option value="teal">Teal (Client)</option>
-          <option value="blue">Blue (Client)</option>
-        </select>
-        <select
-          onChange={(e) => setClientSortOrder(e.target.value)}
-          value={clientSortOrder}
-        >
-          <option value="relevant">Relevant (Filter)</option>
-          <option value="latest">Latest (Filter)</option>
+        <select onChange={handleSortChange} value={sortBy}>
+          <option value="relevant">Relevant (search)</option>
+          <option value="latest">Latest (search)</option>
         </select>
       </div>
       {error && <p>{error}</p>}
@@ -135,6 +117,8 @@ const SearchPage: React.FC = () => {
         images={images}
         filterColor={clientFilterColor}
         sortOrder={clientSortOrder}
+        isLoading={isLoading} // Pass isLoading prop
+        hasSearched={hasSearched} // Pass hasSearched prop
       />
       {images.length > 0 && (
         <div className="pagination">

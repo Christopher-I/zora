@@ -12,9 +12,11 @@ interface ImageListProps {
   images: Image[];
   filterColor: string;
   sortOrder: string;
+  isLoading: boolean;
+  hasSearched: boolean;
 }
 
-const ImageList: React.FC<ImageListProps> = ({ images, filterColor, sortOrder }) => {
+const ImageList: React.FC<ImageListProps> = ({ images, filterColor, sortOrder, isLoading, hasSearched }) => {
   const filteredImages = images.filter((image) => {
     return filterColor ? image.color === filterColor : true;
   });
@@ -26,7 +28,19 @@ const ImageList: React.FC<ImageListProps> = ({ images, filterColor, sortOrder })
     return 0; // Default to relevant (no client-side sorting)
   });
 
-  if (!sortedImages.length) {
+  if (isLoading) {
+    return (
+      <div className="image-list">
+        {[...Array(9)].map((_, index) => (
+          <div key={index} className="image-container">
+            <div className="skeleton-loader"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (hasSearched && !sortedImages.length) {
     return <p>No images found</p>;
   }
 
